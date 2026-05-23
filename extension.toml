@@ -1,0 +1,17 @@
+id = "sftp-sync"
+name = "SFTP Sync"
+version = "0.1.0"
+schema_version = 1
+authors = ["jhs1873"]
+description = "Sync files to remote servers via SFTP/FTP/FTPS on save"
+repository = "https://github.com/jhs1873/zed-sftp"
+
+[language_servers.sftp-sync]
+name = "SFTP Sync"
+languages = [
+  "Bash", "C", "C++", "CSS", "Dart", "Dockerfile", "Elixir", "Elm",
+  "Erlang", "Go", "Haskell", "HTML", "Java", "JavaScript", "JSON",
+  "Kotlin", "Lua", "Markdown", "PHP", "Python", "Ruby", "Rust",
+  "Scala", "SQL", "Swift", "TOML", "TSX", "TypeScript", "Vue", "XML",
+  "YAML", "Plain Text"
+]

@@ -1,0 +1,76 @@
+name: Release sync-server
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 校验 tag 与 extension.toml / lib.rs 版本一致
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TOML_VERSION=$(grep '^version' extension.toml | head -1 | sed -E 's/version *= *"([^"]+)"/\1/')
+          LIB_VERSION=$(grep 'SERVER_VERSION' src/lib.rs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          PKG_VERSION=$(node -p "require('./sync-server/package.json').version")
+          echo "tag=$TAG_VERSION  toml=$TOML_VERSION  lib=$LIB_VERSION  pkg=$PKG_VERSION"
+          if [ "$TAG_VERSION" != "$TOML_VERSION" ] || [ "$TAG_VERSION" != "$LIB_VERSION" ] || [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::版本号不一致：tag/extension.toml/lib.rs/package.json 必须相同"
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: sync-server/package-lock.json
+
+      - name: Install sync-server deps
+        working-directory: sync-server
+        run: npm ci
+
+      - name: Build sync-server
+        working-directory: sync-server
+        run: npm run build
+
+      - name: 打包 sync-server.tar.gz
+        run: |
+          # 只打包运行必需的产物：编译后的 JS + package.json + lock 文件
+          # Zed 用 DownloadedFileType::GzipTar 解压时会按目录结构落入 work_dir/sync-server/
+          # 因此 tar 内部不要再嵌一层 sync-server/ —— 让顶层就是 dist/ 和 package.json
+          cd sync-server
+          tar -czf ../sync-server.tar.gz dist package.json package-lock.json
+          cd ..
+          echo "包内容："
+          tar -tzf sync-server.tar.gz | head -20
+          ls -lh sync-server.tar.gz
+
+      - name: 计算 sha256（写进 Release notes 方便核对）
+        id: hash
+        run: |
+          SHA=$(sha256sum sync-server.tar.gz | cut -d' ' -f1)
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "sha256: $SHA"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sync-server.tar.gz
+          generate_release_notes: true
+          body: |
+            ## sync-server ${{ github.ref_name }}
+
+            **sha256:** `${{ steps.hash.outputs.sha256 }}`
+
+            该资源由扩展运行时通过 `download_file` 自动拉取，无需手动下载。
+            ${{ github.ref_name }} 必须与 `extension.toml`、`src/lib.rs:SERVER_VERSION`、`sync-server/package.json` 的版本号严格一致。

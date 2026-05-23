@@ -1,0 +1,24 @@
+{
+  "name": "sftp-sync-server",
+  "version": "0.1.0",
+  "description": "SFTP/FTP sync server for Zed editor (LSP + MCP)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "basic-ftp": "^5.0.5",
+    "minimatch": "^9.0.0",
+    "ssh2-sftp-client": "10.0.3",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-uri": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ssh2-sftp-client": "^9.0.0",
+    "typescript": "^5.0.0"
+  }
+}

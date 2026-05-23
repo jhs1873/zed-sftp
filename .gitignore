@@ -1,0 +1,25 @@
+# Rust
+/target/
+
+# 扩展编译产物（由 Zed Extension Registry CI 构建）
+extension.wasm
+
+# Node
+sync-server/node_modules/
+sync-server/dist/
+# 注意：sync-server/package-lock.json 必须提交，CI 用 `npm ci` 复现依赖
+
+# 发布打包临时产物
+*.tar.gz
+*.tgz
+
+# 编辑器
+.idea/
+.vscode/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
