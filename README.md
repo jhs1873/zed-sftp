@@ -124,6 +124,39 @@ For the release process see [PUBLISHING.md](./PUBLISHING.md).
 
 ---
 
+## Acknowledgements
+
+This extension stands on the shoulders of these open-source projects:
+
+### Platform & Protocols
+
+- **[Zed](https://zed.dev)** — the editor itself
+- **[zed_extension_api](https://github.com/zed-industries/zed/tree/main/crates/extension_api)** — the Rust crate that lets us run inside Zed's wasm sandbox
+- **[Language Server Protocol](https://microsoft.github.io/language-server-protocol/)** — the `didSave` hook is how we know when to upload
+- **[Model Context Protocol](https://modelcontextprotocol.io)** — exposes SFTP operations as tools callable from Zed's AI assistant
+
+### sync-server runtime (npm)
+
+| Package | Purpose |
+|---|---|
+| [`ssh2-sftp-client`](https://github.com/theophilusx/ssh2-sftp-client) | SFTP transport, built on [ssh2](https://github.com/mscdex/ssh2) |
+| [`basic-ftp`](https://github.com/patrickjuchli/basic-ftp) | FTP / FTPS transport |
+| [`vscode-languageserver`](https://github.com/microsoft/vscode-languageserver-node) | LSP server framework |
+| [`vscode-languageserver-textdocument`](https://github.com/microsoft/vscode-languageserver-node) | LSP text document model |
+| [`vscode-uri`](https://github.com/microsoft/vscode-uri) | URI parsing for LSP |
+| [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk) | MCP server SDK |
+| [`minimatch`](https://github.com/isaacs/minimatch) | `.gitignore`-style glob matching |
+
+### Build & Toolchain
+
+- **[Rust](https://www.rust-lang.org)** + **[wasm32-wasip2](https://github.com/WebAssembly/WASI)** for the extension shell
+- **[TypeScript](https://www.typescriptlang.org)** for the sync-server
+- **[GitHub Actions](https://github.com/features/actions)** + **[softprops/action-gh-release](https://github.com/softprops/action-gh-release)** for the release pipeline
+
+Thanks to all the maintainers — without them this extension would have been an order of magnitude more work.
+
+---
+
 ## License
 
 [MIT](./LICENSE)

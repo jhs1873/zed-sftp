@@ -124,6 +124,39 @@ cd sync-server && npm run build
 
 ---
 
+## 致谢
+
+本扩展构建在以下开源项目之上：
+
+### 平台与协议
+
+- **[Zed](https://zed.dev)** — 编辑器本身
+- **[zed_extension_api](https://github.com/zed-industries/zed/tree/main/crates/extension_api)** — 让我们能在 Zed 的 wasm 沙箱中运行的 Rust crate
+- **[Language Server Protocol](https://microsoft.github.io/language-server-protocol/)** — 我们用它的 `didSave` 钩子触发上传
+- **[Model Context Protocol](https://modelcontextprotocol.io)** — 把 SFTP 操作暴露成 Zed AI 助手可调用的工具
+
+### sync-server 运行时依赖（npm）
+
+| 包 | 用途 |
+|---|---|
+| [`ssh2-sftp-client`](https://github.com/theophilusx/ssh2-sftp-client) | SFTP 传输实现，基于 [ssh2](https://github.com/mscdex/ssh2) |
+| [`basic-ftp`](https://github.com/patrickjuchli/basic-ftp) | FTP / FTPS 传输 |
+| [`vscode-languageserver`](https://github.com/microsoft/vscode-languageserver-node) | LSP 服务端框架 |
+| [`vscode-languageserver-textdocument`](https://github.com/microsoft/vscode-languageserver-node) | LSP 文本文档模型 |
+| [`vscode-uri`](https://github.com/microsoft/vscode-uri) | LSP 中的 URI 解析 |
+| [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk) | MCP 服务端 SDK |
+| [`minimatch`](https://github.com/isaacs/minimatch) | `.gitignore` 风格的 glob 匹配 |
+
+### 构建与工具链
+
+- **[Rust](https://www.rust-lang.org)** + **[wasm32-wasip2](https://github.com/WebAssembly/WASI)** 用于编译扩展外壳
+- **[TypeScript](https://www.typescriptlang.org)** 用于 sync-server
+- **[GitHub Actions](https://github.com/features/actions)** + **[softprops/action-gh-release](https://github.com/softprops/action-gh-release)** 用于发版自动化
+
+感谢这些项目的维护者 —— 没有他们这个扩展的工作量会是现在的好几倍。
+
+---
+
 ## License
 
 [MIT](./LICENSE)
