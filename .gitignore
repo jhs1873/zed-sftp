@@ -12,6 +12,7 @@ sync-server/dist/
 # 发布打包临时产物
 *.tar.gz
 *.tgz
+*.zip
 
 # 编辑器
 .idea/

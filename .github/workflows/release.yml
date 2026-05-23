@@ -1,4 +1,4 @@
-name: Release sync-server
+name: Release
 
 on:
   push:
@@ -55,22 +55,71 @@ jobs:
           tar -tzf sync-server.tar.gz | head -20
           ls -lh sync-server.tar.gz
 
-      - name: 计算 sha256（写进 Release notes 方便核对）
+      - name: Setup Rust（用于编译 extension.wasm）
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip2
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: 编译 extension.wasm
+        run: |
+          cargo build --target wasm32-wasip2 --release
+          cp target/wasm32-wasip2/release/zed_sftp.wasm extension.wasm
+          ls -lh extension.wasm
+
+      - name: 打包完整扩展 zip（朋友"开箱即用"分发包）
+        id: bundle
+        run: |
+          # 解压后是 zed-sftp/ 目录，用户直接 Install Dev Extension 选这个目录即可。
+          # 不包含 src/、sync-server/、target/、node_modules/ —— wasm 已编译好，sync-server 由 download_file 运行时拉取。
+          mkdir -p bundle/zed-sftp
+          cp extension.wasm extension.toml LICENSE README.md README.zh-CN.md CONFIGURATION.md bundle/zed-sftp/
+          ZIP_NAME="zed-sftp-${GITHUB_REF_NAME}.zip"
+          cd bundle && zip -r "../${ZIP_NAME}" zed-sftp/ && cd ..
+          echo "zip_name=${ZIP_NAME}" >> "$GITHUB_OUTPUT"
+          unzip -l "${ZIP_NAME}"
+          ls -lh "${ZIP_NAME}"
+
+      - name: 计算 sha256
         id: hash
         run: |
-          SHA=$(sha256sum sync-server.tar.gz | cut -d' ' -f1)
-          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
-          echo "sha256: $SHA"
+          SERVER_SHA=$(sha256sum sync-server.tar.gz | cut -d' ' -f1)
+          ZIP_SHA=$(sha256sum "${{ steps.bundle.outputs.zip_name }}" | cut -d' ' -f1)
+          echo "server_sha256=$SERVER_SHA" >> "$GITHUB_OUTPUT"
+          echo "zip_sha256=$ZIP_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: sync-server.tar.gz
+          files: |
+            sync-server.tar.gz
+            ${{ steps.bundle.outputs.zip_name }}
           generate_release_notes: true
           body: |
-            ## sync-server ${{ github.ref_name }}
+            ## SFTP Sync ${{ github.ref_name }}
 
-            **sha256:** `${{ steps.hash.outputs.sha256 }}`
+            ### 资源说明
 
-            该资源由扩展运行时通过 `download_file` 自动拉取，无需手动下载。
-            ${{ github.ref_name }} 必须与 `extension.toml`、`src/lib.rs:SERVER_VERSION`、`sync-server/package.json` 的版本号严格一致。
+            | 文件 | 用途 | 谁会下 |
+            |---|---|---|
+            | **`zed-sftp-${{ github.ref_name }}.zip`** | 完整扩展包，开箱即用 | 想"不编译直接用"的最终用户：解压 → Zed → Install Dev Extension → 选 `zed-sftp/` 文件夹 |
+            | `sync-server.tar.gz` | 扩展运行时（LSP + MCP 服务器） | 由扩展 wasm 在首次启动时通过 `download_file` 自动拉取，**用户无需手动下载** |
+
+            ### sha256
+
+            - `sync-server.tar.gz`: `${{ steps.hash.outputs.server_sha256 }}`
+            - `zed-sftp-${{ github.ref_name }}.zip`: `${{ steps.hash.outputs.zip_sha256 }}`
+
+            ### 一致性
+
+            tag `${{ github.ref_name }}` 已通过 CI 校验，与 `extension.toml`、`src/lib.rs:SERVER_VERSION`、`sync-server/package.json` 的版本号严格一致。
+
